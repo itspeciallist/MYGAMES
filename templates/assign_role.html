@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+
+{% block title %}Assign Role - Gaming Hub{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-user-cog me-2"></i>Assign Role
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Note:</strong> You are changing the role for user <strong>{{ user.username }}</strong>. This will affect their permissions on the site.
+                </div>
+
+                <div class="user-info mb-4">
+                    <div class="d-flex align-items-center">
+                        <img src="{{ url_for('static', filename='uploads/' + user.profile_image) }}" 
+                             alt="{{ user.username }}" class="profile-img-large rounded-circle me-3">
+                        <div>
+                            <h5>{{ user.username }}</h5>
+                            <p class="mb-1 text-muted">{{ user.email }}</p>
+                            <span class="badge bg-{{ 'danger' if user.role == 'admin' else 'warning' if user.role == 'moderator' else 'secondary' }}">
+                                Current: {{ user.role.title() }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-4">
+                        {{ form.role.label(class="form-label fw-bold") }}
+                        {{ form.role(class="form-select form-control-lg") }}
+                        {% if form.role.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.role.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Role Descriptions -->
+                    <div class="role-descriptions mb-4">
+                        <div class="role-card" data-role="user">
+                            <div class="card border-secondary">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <span class="badge bg-secondary me-2">User</span>
+                                        Regular User
+                                    </h6>
+                                    <ul class="small mb-0">
+                                        <li>View and download games</li>
+                                        <li>Post comments and reactions</li>
+                                        <li>Manage personal profile</li>
+                                        <li>Share games with others</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="role-card mt-3" data-role="moderator">
+                            <div class="card border-warning">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <span class="badge bg-warning text-dark me-2">Moderator</span>
+                                        Content Moderator
+                                    </h6>
+                                    <ul class="small mb-0">
+                                        <li>All user permissions</li>
+                                        <li>Add and remove games</li>
+                                        <li>Delete inappropriate comments</li>
+                                        <li>Apply 1-day bans to users</li>
+                                        <li>Access moderator dashboard</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="role-card mt-3" data-role="admin">
+                            <div class="card border-danger">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <span class="badge bg-danger me-2">Administrator</span>
+                                        Site Administrator
+                                    </h6>
+                                    <ul class="small mb-0">
+                                        <li>All moderator permissions</li>
+                                        <li>Assign roles to users</li>
+                                        <li>Apply custom duration bans</li>
+                                        <li>Access admin dashboard</li>
+                                        <li>View site statistics</li>
+                                        <li>Manage all users</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <button type="submit" class="btn btn-primary btn-lg me-3">
+                                <i class="fas fa-save me-2"></i>Update Role
+                            </button>
+                            <a href="{{ url_for('manage_users') }}" class="btn btn-outline-secondary btn-lg">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Role Change History -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-history me-2"></i>Account History
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-success"></div>
+                        <div class="timeline-content">
+                            <h6 class="mb-1">Account Created</h6>
+                            <small class="text-muted">{{ user.created_at.strftime('%B %d, %Y at %I:%M %p') }}</small>
+                            <p class="small mb-0">User {{ user.username }} joined Gaming Hub</p>
+                        </div>
+                    </div>
+                    
+                    {% if user.last_name_change %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-info"></div>
+                        <div class="timeline-content">
+                            <h6 class="mb-1">Profile Updated</h6>
+                            <small class="text-muted">{{ user.last_name_change.strftime('%B %d, %Y at %I:%M %p') }}</small>
+                            <p class="small mb-0">Username was changed</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if user.user_bans %}
+                        {% for ban in user.user_bans[:3] %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-warning"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-1">{{ 'Banned' if ban.is_active else 'Ban Expired' }}</h6>
+                                <small class="text-muted">{{ ban.created_at.strftime('%B %d, %Y at %I:%M %p') }}</small>
+                                <p class="small mb-0">{{ ban.reason or 'No reason provided' }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Highlight selected role description
+document.getElementById('role').addEventListener('change', function() {
+    const selectedRole = this.value;
+    const roleCards = document.querySelectorAll('.role-card');
+    
+    roleCards.forEach(card => {
+        const cardRole = card.dataset.role;
+        if (cardRole === selectedRole) {
+            card.classList.add('selected-role');
+        } else {
+            card.classList.remove('selected-role');
+        }
+    });
+});
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const currentRole = document.getElementById('role').value;
+    if (currentRole) {
+        const roleCard = document.querySelector(`[data-role="${currentRole}"]`);
+        if (roleCard) {
+            roleCard.classList.add('selected-role');
+        }
+    }
+});
+</script>
+
+<style>
+.timeline {
+    position: relative;
+    padding-left: 2rem;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.timeline-item:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: -1.75rem;
+    top: 1.5rem;
+    bottom: -1.5rem;
+    width: 2px;
+    background-color: #dee2e6;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -2rem;
+    top: 0.25rem;
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+.timeline-content {
+    padding: 0.5rem;
+    background-color: #f8f9fa;
+    border-radius: 0.375rem;
+    border-left: 3px solid #dee2e6;
+}
+
+.selected-role {
+    transform: scale(1.02);
+    transition: transform 0.2s ease;
+}
+
+.selected-role .card {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+</style>
+{% endblock %}
