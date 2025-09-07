@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Access Denied - Gaming Hub{% endblock %}
+
+{% block content %}
+<div class="text-center py-5">
+    <div class="error-container">
+        <i class="fas fa-ban fa-5x text-danger mb-4"></i>
+        <h1 class="display-4 fw-bold text-danger">403</h1>
+        <h2 class="mb-4">Access Denied</h2>
+        <p class="lead mb-4">
+            You don't have permission to access this resource. This area is restricted to authorized users only.
+        </p>
+        
+        <div class="alert alert-warning d-inline-block">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Need access?</strong> Contact an administrator if you believe you should have permission to view this page.
+        </div>
+        
+        <div class="mt-4">
+            <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg me-3">
+                <i class="fas fa-home me-2"></i>Go Home
+            </a>
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('profile') }}" class="btn btn-outline-secondary btn-lg">
+                <i class="fas fa-user me-2"></i>My Profile
+            </a>
+            {% else %}
+            <a href="{{ url_for('login') }}" class="btn btn-outline-secondary btn-lg">
+                <i class="fas fa-sign-in-alt me-2"></i>Login
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.error-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.error-container i {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+</style>
+{% endblock %}
