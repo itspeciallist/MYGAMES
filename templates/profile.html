@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}პროფილი - თამაშების ჰაბი{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">
+                    <i class="fas fa-user me-2"></i>ჩემი პროფილი
+                </h3>
+            </div>
+            <div class="card-body p-4">
+                <div class="text-center mb-4">
+                    <img src="{{ url_for('static', filename='uploads/' + current_user.profile_image) }}" 
+                         alt="Profile Picture" class="profile-img-large rounded-circle mb-3">
+                    <h4>{{ current_user.username }}</h4>
+                    <span class="badge bg-{{ 'danger' if current_user.role == 'admin' else 'warning' if current_user.role == 'moderator' else 'primary' }}">
+                        {{ current_user.role.title() }}
+                    </span>
+                </div>
+
+                <!-- Profile Update Form -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5 class="border-bottom pb-2 mb-3">
+                            <i class="fas fa-edit me-2"></i>პროფილის განახლება
+                        </h5>
+                        
+                        <form method="POST" enctype="multipart/form-data">
+                            {{ form.hidden_tag() }}
+                            
+                            <div class="mb-3">
+                                {{ form.username.label(class="form-label") }}
+                                {{ form.username(class="form-control") }}
+                                {% if not current_user.can_change_username() %}
+                                    <small class="text-muted">
+                                        You can change your username again on {{ (current_user.last_name_change + timedelta(days=30)).strftime('%Y-%m-%d') if current_user.last_name_change else 'anytime' }}.
+                                    </small>
+                                {% endif %}
+                                {% if form.username.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in form.username.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                {{ form.email.label(class="form-label") }}
+                                {{ form.email(class="form-control") }}
+                                {% if form.email.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in form.email.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                {{ form.profile_image.label(class="form-label") }}
+                                {{ form.profile_image(class="form-control") }}
+                                {% if form.profile_image.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in form.profile_image.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <button type="submit" name="update_profile" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Update Profile
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h5 class="border-bottom pb-2 mb-3">
+                            <i class="fas fa-lock me-2"></i>Change Password
+                        </h5>
+                        
+                        <form method="POST">
+                            {{ password_form.hidden_tag() }}
+                            
+                            <div class="mb-3">
+                                {{ password_form.current_password.label(class="form-label") }}
+                                {{ password_form.current_password(class="form-control") }}
+                                {% if password_form.current_password.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in password_form.current_password.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                {{ password_form.new_password.label(class="form-label") }}
+                                {{ password_form.new_password(class="form-control") }}
+                                {% if password_form.new_password.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in password_form.new_password.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                {{ password_form.confirm_password.label(class="form-label") }}
+                                {{ password_form.confirm_password(class="form-control") }}
+                                {% if password_form.confirm_password.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in password_form.confirm_password.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <button type="submit" name="change_password" class="btn btn-warning">
+                                <i class="fas fa-key me-2"></i>Change Password
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Account Information -->
+                <div class="mt-4 pt-4 border-top">
+                    <h5 class="mb-3">
+                        <i class="fas fa-info-circle me-2"></i>Account Information
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Member Since:</strong> {{ current_user.created_at.strftime('%B %d, %Y') }}</p>
+                            <p><strong>Email:</strong> {{ current_user.email }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Role:</strong> {{ current_user.role.title() }}</p>
+                            <p><strong>Status:</strong> 
+                                <span class="badge bg-{{ 'danger' if current_user.is_banned else 'success' }}">
+                                    {{ 'Banned' if current_user.is_banned else 'Active' }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
