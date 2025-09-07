@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}თამაშების ჰაბი - აღმოაჩინე შესანიშნავი თამაშები{% endblock %}
+
+{% block content %}
+<div class="hero-section text-center py-5 mb-5">
+    <div class="row align-items-center">
+        <div class="col-lg-6">
+            <h1 class="display-4 fw-bold mb-4">
+                <i class="fas fa-gamepad text-primary"></i>
+                კეთილი იყოს თქვენი მობრძანება თამაშების ჰაბში
+            </h1>
+            <p class="lead mb-4">აღმოაჩინე, გადმოწერე და ისიამოვნე საუკეთესო თამაშებით ყველა ჟანრიდან. შენი საბოლოო თამაშების დანიშნულება.</p>
+            {% if not current_user.is_authenticated %}
+            <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg me-3">
+                <i class="fas fa-user-plus me-2"></i>გაწევრიანება
+            </a>
+            <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-lg">
+                <i class="fas fa-sign-in-alt me-2"></i>შესვლა
+            </a>
+            {% endif %}
+        </div>
+        <div class="col-lg-6">
+            <div class="gaming-stats">
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="stat-card">
+                            <i class="fas fa-gamepad fa-2x text-primary mb-2"></i>
+                            <h4>{{ games.total }}</h4>
+                            <small>ხელმისაწვდომი თამაშები</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="stat-card">
+                            <i class="fas fa-users fa-2x text-success mb-2"></i>
+                            <h4>1000+</h4>
+                            <small>აქტიური მოთამაშე</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="stat-card">
+                            <i class="fas fa-download fa-2x text-warning mb-2"></i>
+                            <h4>50K+</h4>
+                            <small>გადმოწერა</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filter Section -->
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <form method="GET" class="d-flex">
+            <input type="text" name="search" class="form-control me-2" placeholder="მოძებნე თამაშები..." 
+                   value="{{ search_query }}">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
+    </div>
+    <div class="col-lg-4">
+        <select class="form-select" onchange="filterByGenre(this.value)">
+            <option value="">ყველა ჟანრი</option>
+            {% for genre in genres %}
+            <option value="{{ genre }}" {% if current_genre == genre %}selected{% endif %}>
+                {{ genre.title() }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+</div>
+
+<!-- Games Grid -->
+{% if games.items %}
+<div class="row">
+    {% for game in games.items %}
+    <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card game-card h-100">
+            {% if game.image_url %}
+            <img src="{{ game.image_url }}" class="card-img-top game-image" alt="{{ game.title }}">
+            {% else %}
+            <div class="card-img-top game-placeholder d-flex align-items-center justify-content-center">
+                <i class="fas fa-gamepad fa-3x text-muted"></i>
+            </div>
+            {% endif %}
+            
+            <div class="card-body d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h5 class="card-title">{{ game.title }}</h5>
+                    <span class="badge bg-primary">{{ game.genre.title() }}</span>
+                </div>
+                
+                <p class="card-text flex-grow-1">
+                    {{ game.description[:100] }}{% if game.description|length > 100 %}...{% endif %}
+                </p>
+                
+                <div class="game-stats mb-3">
+                    <small class="text-muted">
+                        <i class="fas fa-thumbs-up me-1"></i>{{ game.get_like_count() }}
+                        <i class="fas fa-thumbs-down mx-2"></i>{{ game.get_dislike_count() }}
+                        <i class="fas fa-comments mx-2"></i>{{ game.comments|length }}
+                    </small>
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('game_detail', game_id=game.id) }}" class="btn btn-outline-primary">
+                        <i class="fas fa-info-circle me-1"></i>დეტალები
+                    </a>
+                    <a href="{{ game.download_link }}" target="_blank" class="btn btn-success" rel="nofollow">
+                        <i class="fas fa-download me-1"></i>გადმოწერა
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if games.pages > 1 %}
+<nav aria-label="Game pagination">
+    <ul class="pagination justify-content-center">
+        {% if games.has_prev %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('index', page=games.prev_num, genre=current_genre, search=search_query) }}">
+                წინა
+            </a>
+        </li>
+        {% endif %}
+        
+        {% for page_num in games.iter_pages() %}
+            {% if page_num %}
+                {% if page_num != games.page %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('index', page=page_num, genre=current_genre, search=search_query) }}">
+                        {{ page_num }}
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item active">
+                    <span class="page-link">{{ page_num }}</span>
+                </li>
+                {% endif %}
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">...</span>
+            </li>
+            {% endif %}
+        {% endfor %}
+        
+        {% if games.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('index', page=games.next_num, genre=current_genre, search=search_query) }}">
+                შემდეგი
+            </a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<div class="text-center py-5">
+    <i class="fas fa-gamepad fa-4x text-muted mb-3"></i>
+    <h3 class="text-muted">თამაშები ვერ მოიძებნა</h3>
+    <p class="text-muted">{% if search_query %}თამაშები ვერ შეესაბამება თქვენს საძიებო კრიტერიუმებს.{% else %}თამაშები ჯერ არ არის ხელმისაწვდომი.{% endif %}</p>
+    {% if current_user.is_authenticated and current_user.role in ['moderator', 'admin'] %}
+    <a href="{{ url_for('add_game') }}" class="btn btn-primary mt-3">
+        <i class="fas fa-plus me-2"></i>პირველი თამაშის დამატება
+    </a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function filterByGenre(genre) {
+    const url = new URL(window.location);
+    if (genre) {
+        url.searchParams.set('genre', genre);
+    } else {
+        url.searchParams.delete('genre');
+    }
+    url.searchParams.delete('page');
+    window.location = url;
+}
+</script>
+{% endblock %}
