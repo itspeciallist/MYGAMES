@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}Ban User - Gaming Hub{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-warning text-dark">
+                <h4 class="mb-0">
+                    <i class="fas fa-ban me-2"></i>Ban User
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Warning:</strong> You are about to ban user <strong>{{ user.username }}</strong>. This will prevent them from accessing the site.
+                </div>
+
+                <div class="user-info mb-4">
+                    <div class="d-flex align-items-center">
+                        <img src="{{ url_for('static', filename='uploads/' + user.profile_image) }}" 
+                             alt="{{ user.username }}" class="profile-img-large rounded-circle me-3">
+                        <div>
+                            <h5>{{ user.username }}</h5>
+                            <p class="mb-1 text-muted">{{ user.email }}</p>
+                            <span class="badge bg-{{ 'danger' if user.role == 'admin' else 'warning' if user.role == 'moderator' else 'secondary' }}">
+                                {{ user.role.title() }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.reason.label(class="form-label fw-bold") }}
+                        {{ form.reason(class="form-control", placeholder="Enter the reason for banning this user...") }}
+                        {% if form.reason.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.reason.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.duration_days.label(class="form-label fw-bold") }}
+                                {{ form.duration_days(class="form-control") }}
+                                {% if form.duration_days.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.duration_days.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Ban Type</label>
+                                <div class="form-check">
+                                    {{ form.permanent(class="form-check-input") }}
+                                    {{ form.permanent.label(class="form-check-label") }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <small>
+                            <i class="fas fa-info-circle me-1"></i>
+                            {% if current_user.role == 'moderator' %}
+                                As a moderator, you can only apply 1-day bans.
+                            {% else %}
+                                As an administrator, you can set custom ban durations or permanent bans.
+                            {% endif %}
+                        </small>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <button type="submit" class="btn btn-warning btn-lg me-3">
+                                <i class="fas fa-ban me-2"></i>Apply Ban
+                            </button>
+                            <a href="{{ url_for('manage_users') }}" class="btn btn-outline-secondary btn-lg">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Ban History -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-history me-2"></i>Previous Bans
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if user.user_bans %}
+                    <div class="list-group list-group-flush">
+                        {% for ban in user.user_bans %}
+                        <div class="list-group-item px-0">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>{{ ban.reason or 'No reason provided' }}</strong>
+                                    <br>
+                                    <small class="text-muted">
+                                        Banned by {{ ban.banned_by.username }} on {{ ban.created_at.strftime('%B %d, %Y') }}
+                                        {% if ban.expires_at %}
+                                            • Expires: {{ ban.expires_at.strftime('%B %d, %Y') }}
+                                        {% else %}
+                                            • Permanent
+                                        {% endif %}
+                                    </small>
+                                </div>
+                                <span class="badge bg-{{ 'success' if not ban.is_active else 'danger' }}">
+                                    {{ 'Expired' if not ban.is_active else 'Active' }}
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center py-3">No previous bans</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Toggle duration field based on permanent ban checkbox
+document.getElementById('permanent').addEventListener('change', function() {
+    const durationField = document.getElementById('duration_days');
+    if (this.checked) {
+        durationField.disabled = true;
+        durationField.value = '';
+    } else {
+        durationField.disabled = false;
+        durationField.value = '1';
+    }
+});
+</script>
+{% endblock %}
